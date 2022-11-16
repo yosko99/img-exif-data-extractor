@@ -1,0 +1,28 @@
+.show{ 
+    animation: 1s alternate slidein;
+}
+
+
+@keyframes slidein {
+    from {
+        display: block;
+        opacity: 0;
+    }
+  
+    to {
+        opacity: 100;
+    }
+  }
+
+
+.hide {
+    display: none !important;
+}
+
+#thumbnail {
+    cursor: pointer;
+}
+
+#links{
+    height: 500px;
+}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styles/bootstrap.min.css" />
+    <link rel="stylesheet" href="./styles/styles.css" />
+    <title>Document</title>
+  </head>
+
+  <body class="container">
+    <form
+      action="/upload"
+      class="form-group d-flex mt-2"
+      id="uploadForm"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      <input
+        type="file"
+        name="image"
+        class="form-control"
+        accept="image/gif,image/jpeg,image/jpg,image/png"
+      />
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    <br />
+
+    <form action="/" method="GET" class="form-group row" id="fetchImages">
+      <div class="col-3">
+        <label for="minLon">Min lon</label>
+        <input
+          type="number"
+          class="form-control"
+          step="any"
+          id="minLon"
+          name="minLon"
+          required
+          min="-90"
+          max="90"
+        />
+      </div>
+      <div class="col-3">
+        <label for="maxLon">Max lon</label>
+        <input
+          type="number"
+          class="form-control"
+          step="any"
+          id="maxLon"
+          name="maxLon"
+          required
+          min="-90"
+          max="90"
+        />
+      </div>
+      <div class="col-3">
+        <label for="minLat">Min lat</label>
+        <input
+          type="number"
+          class="form-control"
+          step="any"
+          id="minLat"
+          name="minLat"
+          required
+          min="-90"
+          max="90"
+        />
+      </div>
+      <div class="col-3">
+        <label for="maxLat">Max lat</label>
+        <input
+          type="number"
+          class="form-control"
+          step="any"
+          id="maxLat"
+          name="maxLat"
+          required
+          min="-90"
+          max="90"
+        />
+      </div>
+      <div class="d-flex justify-content-center align-items-center">
+        <button type="submit" class="btn btn-primary mt-3 w-50">Submit</button>
+      </div>
+    </form>
+
+    <div
+      id="thumbnailHolder"
+      class="d-flex justify-content-center align-items-center flex-column my-3 hide"
+    >
+      <img
+        src=""
+        alt=""
+        width="256"
+        height="256"
+        class="shadow-lg"
+        id="thumbnail"
+      />
+      <button id="deleteButton" class="btn btn-danger mt-2">DELETE</button>
+    </div>
+
+    <hr />
+
+    <div
+      class="alert alert-light d-flex justify-content-center align-content-center hide"
+      role="alert"
+      id="refetchAlert"
+    >
+      <p class="m-0 me-3">Change detected refetching...</p>
+
+      <div class="spinner-border spinner-border-sm mt-1" role="status"></div>
+    </div>
+    <div
+      id="links"
+      class="d-flex align-items-center flex-column overflow-scroll"
+    ></div>
+  </body>
+  <script src="client.js"></script>
+</html>
