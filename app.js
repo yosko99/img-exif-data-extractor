@@ -1,6 +1,6 @@
 const express = require('express');
 const exiftool = require('exiftool-vendored').exiftool;
-const fsPromises = require('fs/promises');
+
 const cors = require('cors');
 const WebSocket = require('ws');
 
@@ -8,9 +8,11 @@ const checkIfUploadsFolderExistsMiddleware = require('./middleware/checkIfUpload
 const generatedImageIDMiddleware = require('./middleware/generatedImageIDMiddleware');
 const isFileProvidedMiddleware = require('./middleware/isFileProvidedMiddleware');
 
+const coordinatesExtractor = require('./functions/coordinatesExtractor');
+const deleteImage = require('./functions/deleteImage');
+
 const upload = require('./config/upload');
 const db = require('./config/db.js');
-const sharp = require('sharp');
 
 require('dotenv').config();
 
@@ -32,15 +34,6 @@ wss.broadcast = (msg) => {
   });
 };
 
-const deleteImageAndThumbnail = async (filePath) => {
-  try {
-    await fsPromises.unlink('./public/uploads/' + filePath);
-    await fsPromises.unlink(`./public/uploads/thumbnail-${filePath}`);
-  } catch (err) {
-    console.log(err);
-  }
-};
-
 app.post(
   '/upload',
   checkIfUploadsFolderExistsMiddleware,
@@ -58,33 +51,32 @@ app.post(
       createdIDs: []
     };
 
-    await Promise.all(files.map(async (file, index) => {
-      const fileExifData = await exiftool.read(file.path);
-
-      await sharp(file.path).resize(256, 256).toFile(`public/uploads/thumbnail-${file.filename}`);
-
+    await Promise.all(files.map(async (file) => {
       const filepath = `${req.imageID}-${file.originalname}`;
 
-      if (fileExifData.GPSAltitude !== undefined) {
-        const lat = fileExifData.GPSLatitude;
-        const lon = fileExifData.GPSLongitude;
+      const { GPSLatitude, GPSLongitude } = coordinatesExtractor(file.path);
+
+      if (GPSLatitude !== undefined) {
+        exiftool.extractPreview(file.path, `public/uploads/thumbnail-${file.filename}`);
+
+        const lat = GPSLatitude;
+        const lon = GPSLongitude;
 
         db.query(
           `INSERT INTO Image VALUES ("${filepath}",
-          ${lat},
-          ${lon},
-          "${file.originalname}",
-          "thumbnail-${filepath}")`
+                    ${lat},
+                    ${lon},
+                    "${file.originalname}",
+                    "thumbnail-${filepath}")`
         );
 
-        response.successful++;
+        response.createdIDs[response.successful++] = filepath;
         response.message = `Successfully imported images: ${response.successful}`;
-        response.createdIDs[index] = filepath;
       } else {
         response.unsuccessful++;
         response.error = `No GPS Data in provided image. Unsuccessfully imported images ${response.unsuccessful}`;
 
-        await deleteImageAndThumbnail(filepath);
+        await deleteImage(filepath);
       }
     }));
 
@@ -104,7 +96,9 @@ app.delete('/:id', async (req, res) => {
     const didDelete = result.affectedRows !== 0;
 
     if (didDelete) {
-      await deleteImageAndThumbnail(filepath);
+      await deleteImage(filepath);
+      await deleteImage(`thumbnail-${filepath}`);
+
       return res.status(200).json({
         message: 'Image deleted.'
       });
